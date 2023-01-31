@@ -2,7 +2,7 @@
 
 struct Node {
     int freq;
-    std::string word;
+    char chr;
     Node *left;
     Node *right;
 };
