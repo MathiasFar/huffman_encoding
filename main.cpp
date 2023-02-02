@@ -6,7 +6,6 @@
 #include <string>
 #include <sstream>
 #include <vector>
-#include "tree.h"
 
 // References:
 //     https://resources.nerdfirst.net/huffman
@@ -62,8 +61,6 @@ Node* generateTree(std::vector<Node*> pq) {
         Node *right = pq.back();
         pq.pop_back();
         Node *new_node = new Node{left->freq+right->freq, left->chr+right->chr, left, right};
-        /* std::cout<<left->chr<<": "<<left->freq<<std::endl; */
-        /* std::cout<<right->chr<<": "<<right->freq<<std::endl; */
         pq.push_back(new_node);
         std::sort(pq.begin(), pq.end(), compare_nodes());
     }
@@ -86,26 +83,13 @@ void printCodes(Node *node, std::string code, std::vector<Code*> &vectorCodes) {
 int main() {
     std::string data = "helloeoasdfasdfasdfo";
     std::vector<Node*> cf = termFreq(data);
-    std::vector<Node*> pQueue;
+    std::vector<Node*> pq;
     for(auto &leaf : cf) {
-        int i = 0;
-        if(pQueue.size() > 0) {
-            while(i < pQueue.size() and leaf->freq < pQueue[i]->freq) {
-                ++i;
-            }
-            pQueue.insert(pQueue.begin()+i, leaf);
-        } else {
-            pQueue.push_back(leaf);
-        }
+        pq.push_back(leaf);
     }
-
-    /* for(auto &n : pQueue) { */
-    /*     std::cout<<n->chr<<": "<<n->freq<<std::endl; */
-    /* } */
+    std::sort(pq.begin(), pq.end(), compare_nodes());
 
     Node *root = generateTree(pQueue);
-    /* std::cout<<root->left->chr<<std::endl; */
-    /* std::cout<<root->right->chr<<std::endl; */
     std::vector<Code*> codes;
     printCodes(root, "", codes);
 
