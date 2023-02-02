@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 #include <unordered_map>
 #include <algorithm>
 #include <queue>
@@ -18,12 +19,12 @@
 struct Node {
     int freq;
     std::string chr;
-    Node *left;
-    Node *right;
+    std::shared_ptr<Node> left;
+    std::shared_ptr<Node> right;
 };
 
-std::vector<Node*> termFreq(std::string data) {
-    std::vector<Node*> terms;
+std::vector<std::shared_ptr<Node>> termFreq(std::string data) {
+    std::vector<std::shared_ptr<Node>> terms;
     for(auto &ch : data) {
         std::string sch(1, ch);
         bool found = false;
@@ -35,35 +36,32 @@ std::vector<Node*> termFreq(std::string data) {
             }
         }
         if(!found) {
-            Node *new_node = new Node{1, sch};
-            terms.push_back(new_node);
+            terms.push_back(std::make_unique<Node>(Node{1, sch}));
         }
     }
     return terms;
 }
 
 struct compare_nodes {
-    bool operator()(Node* a, Node* b) {
+    bool operator()(std::shared_ptr<Node> &a, std::shared_ptr<Node> &b) {
         return a->freq > b->freq;
     }
 };
 
-Node* generateTree(std::vector<Node*> pq) {
+std::shared_ptr<Node> generateTree(std::vector<std::shared_ptr<Node>> pq) {
     while(pq.size() > 1) {
-        Node *left = pq.back();
+        auto left = std::move(pq.back());
         pq.pop_back();
-        Node *right = pq.back();
+        auto right = std::move(pq.back());
         pq.pop_back();
-        Node *new_node = new Node{left->freq+right->freq, left->chr+right->chr, left, right};
-        pq.push_back(new_node);
+        pq.push_back(std::make_shared<Node>(Node{left->freq+right->freq, left->chr+right->chr, left, right}));
         std::sort(pq.begin(), pq.end(), compare_nodes());
     }
-    return pq.front();
+    return std::move(pq.front());
 }
 
-void printCodes(Node *node, std::string code, std::unordered_map<std::string, std::string> &m) {
-    if(node->left == nullptr) {
-        /* std::cout<<node->chr<<": "<<code<<std::endl; */
+void printCodes(std::shared_ptr<Node> &node, std::string code, std::unordered_map<std::string, std::string> &m) {
+    if(!node->left) {
         m[node->chr] = code;
         return;
     }
@@ -74,14 +72,14 @@ void printCodes(Node *node, std::string code, std::unordered_map<std::string, st
 
 int main() {
     std::string data = "hel loeoasdfasdfasdfo";
-    std::vector<Node*> cf = termFreq(data);
-    std::vector<Node*> pq;
+    std::vector<std::shared_ptr<Node>> cf = termFreq(data);
+    std::vector<std::shared_ptr<Node>> pq;
     for(auto &leaf : cf) {
         pq.push_back(leaf);
     }
     std::sort(pq.begin(), pq.end(), compare_nodes());
 
-    Node *root = generateTree(pq);
+    auto root = generateTree(pq);
     std::unordered_map<std::string, std::string> codes;
     printCodes(root, "", codes);
 
