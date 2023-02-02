@@ -7,7 +7,6 @@
 #include <string>
 #include <sstream>
 #include <vector>
-
 // References:
 //     https://resources.nerdfirst.net/huffman
 
@@ -15,47 +14,22 @@
 //     [+] Priority Queue
 //     [+] Word Frequency
 //     [+] Huffman Algorithm
-//
+//     [] Use STL priority queue instead of constantly sorting
+
 struct Node {
     int freq;
     std::string chr;
-    std::shared_ptr<Node> left;
-    std::shared_ptr<Node> right;
+    std::shared_ptr<Node> left, right;
 };
-
-std::vector<std::shared_ptr<Node>> termFreq(std::string data) {
-    std::vector<std::shared_ptr<Node>> terms;
-    for(auto &ch : data) {
-        std::string sch(1, ch);
-        bool found = false;
-        for(auto &node : terms) {
-            if(node->chr == sch) {
-                ++node->freq;
-                found = true;
-                break;
-            }
-        }
-        if(!found) {
-            terms.push_back(std::make_unique<Node>(Node{1, sch}));
-        }
-    }
-    return terms;
-}
-
-struct compare_nodes {
-    bool operator()(std::shared_ptr<Node> &a, std::shared_ptr<Node> &b) {
-        return a->freq > b->freq;
-    }
-};
-
 std::shared_ptr<Node> generateTree(std::vector<std::shared_ptr<Node>> pq) {
+    auto compare = [](const auto &a, const auto &b) { return a->freq > b->freq;};
     while(pq.size() > 1) {
         auto left = std::move(pq.back());
         pq.pop_back();
         auto right = std::move(pq.back());
         pq.pop_back();
         pq.push_back(std::make_shared<Node>(Node{left->freq+right->freq, left->chr+right->chr, left, right}));
-        std::sort(pq.begin(), pq.end(), compare_nodes());
+        std::sort(pq.begin(), pq.end(), compare);
     }
     return std::move(pq.front());
 }
@@ -69,24 +43,22 @@ void printCodes(std::shared_ptr<Node> &node, std::string code, std::unordered_ma
     printCodes(node->left,code+"0", m);
 }
 
-
 int main() {
-    std::string data = "hel loeoasdfasdfasdfo";
-    std::vector<std::shared_ptr<Node>> cf = termFreq(data);
-    std::vector<std::shared_ptr<Node>> pq;
-    for(auto &leaf : cf) {
-        pq.push_back(leaf);
+    std::string data = "hej med dig";
+    std::unordered_map<std::string, int> freq;
+    for(auto &ch : data) {
+        freq[std::string(1,ch)]++;
     }
-    std::sort(pq.begin(), pq.end(), compare_nodes());
-
+    std::vector<std::shared_ptr<Node>> pq;
+    for(const auto &kv : freq) {
+        std::string kvfirst(kv.first);
+        pq.push_back(std::make_shared<Node>(Node{kv.second, kvfirst}));
+    }
     auto root = generateTree(pq);
     std::unordered_map<std::string, std::string> codes;
     printCodes(root, "", codes);
-
     for(auto &ch : data) {
-        std::string sch(1, ch);
-        auto it = codes.find(sch);
-        std::cout<<it->second;
+        std::cout<<codes[std::string(1, ch)];
     }
     std::cout<<std::endl;
     return 0;
