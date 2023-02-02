@@ -14,18 +14,12 @@
 //     [+] Priority Queue
 //     [+] Word Frequency
 //     [+] Huffman Algorithm
-//     [] make it work with spaces idk why it doesnt
 //
 struct Node {
     int freq;
     std::string chr;
     Node *left;
     Node *right;
-};
-
-struct Code {
-    std::string ch;
-    std::string code;
 };
 
 std::vector<Node*> termFreq(std::string data) {
@@ -67,21 +61,19 @@ Node* generateTree(std::vector<Node*> pq) {
     return pq.front();
 }
 
-void printCodes(Node *node, std::string code, std::vector<Code*> &vectorCodes) {
+void printCodes(Node *node, std::string code, std::unordered_map<std::string, std::string> &m) {
     if(node->left == nullptr) {
-        std::cout<<node->chr<<": "<<code<<std::endl;
-        Code *c = new Code{node->chr, code};
-        vectorCodes.push_back(c);
+        /* std::cout<<node->chr<<": "<<code<<std::endl; */
+        m[node->chr] = code;
         return;
     }
-    printCodes(node->right,code+"1", vectorCodes);
-    printCodes(node->left,code+"0", vectorCodes);
-
+    printCodes(node->right,code+"1", m);
+    printCodes(node->left,code+"0", m);
 }
 
 
 int main() {
-    std::string data = "helloeoasdfasdfasdfo";
+    std::string data = "hel loeoasdfasdfasdfo";
     std::vector<Node*> cf = termFreq(data);
     std::vector<Node*> pq;
     for(auto &leaf : cf) {
@@ -89,17 +81,15 @@ int main() {
     }
     std::sort(pq.begin(), pq.end(), compare_nodes());
 
-    Node *root = generateTree(pQueue);
-    std::vector<Code*> codes;
+    Node *root = generateTree(pq);
+    std::unordered_map<std::string, std::string> codes;
     printCodes(root, "", codes);
 
     for(auto &ch : data) {
-        std::string sch(1, ch);    
-        for(auto &x : codes) {
-            if(sch == x->ch) {
-                std::cout<<x->code;
-            }
-        }
+        std::string sch(1, ch);
+        auto it = codes.find(sch);
+        std::cout<<it->second;
     }
+    std::cout<<std::endl;
     return 0;
 }
